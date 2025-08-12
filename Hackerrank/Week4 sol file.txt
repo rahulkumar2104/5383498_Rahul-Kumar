@@ -1,0 +1,783 @@
+Roads and Libraries---------------------------------------------------------------------
+#include <bits/stdc++.h>
+
+using namespace std;
+
+string ltrim(const string &);
+string rtrim(const string &);
+vector<string> split(const string &);
+
+// simple hashes, though limited to space
+int Size[100001];
+int Parent[100001];
+
+int find(int a) {
+    if(a == Parent[a]) return a;
+    return Parent[a] = find(Parent[a]);
+}
+
+// Group cities based on the potential roads
+void group(int a, int b) {
+    a = find(a);
+    b = find(b);
+    if (a == b) return;
+    if (Size[a] < Size[b]) swap(a, b);
+    Parent[b] = a;
+    Size[a] += Size[b];
+}
+
+/*
+ * Complete the 'roadsAndLibraries' function below.
+ *
+ * The function is expected to return a LONG_INTEGER.
+ * The function accepts following parameters:
+ *  1. INTEGER n
+ *  2. INTEGER c_lib
+ *  3. INTEGER c_road
+ *  4. 2D_INTEGER_ARRAY cities
+ */
+
+long roadsAndLibraries(int n, int c_lib, int c_road, vector<vector<int>> cities) {
+    
+    // if lib cost is cheaper than that of road
+    if (c_lib <= c_road) 
+        return n * 1LL * c_lib;
+    
+    for (int i = 1; i <= n; i++) {
+        Size[i] = 1;
+        Parent[i] = i;
+    }
+    
+    for (auto c: cities) {
+        group(c[0], c[1]);
+    }
+    
+    // visited flag map
+    unordered_map<int, bool> umap;
+    long long cost = 0;
+    
+    // check each city
+    for (int i = 1; i <= n; i++) {
+        int p = find(i);
+        if (umap[p]) continue;
+        cost += c_lib;
+        cost += ((Size[p] - 1) * c_road);
+        umap[p] = 1;
+    }
+    
+    return cost;
+}
+
+int main()
+{
+    ofstream fout(getenv("OUTPUT_PATH"));
+
+    string q_temp;
+    getline(cin, q_temp);
+
+    int q = stoi(ltrim(rtrim(q_temp)));
+
+    for (int q_itr = 0; q_itr < q; q_itr++) {
+        string first_multiple_input_temp;
+        getline(cin, first_multiple_input_temp);
+
+        vector<string> first_multiple_input = split(rtrim(first_multiple_input_temp));
+
+        int n = stoi(first_multiple_input[0]);
+
+        int m = stoi(first_multiple_input[1]);
+
+        int c_lib = stoi(first_multiple_input[2]);
+
+        int c_road = stoi(first_multiple_input[3]);
+
+        vector<vector<int>> cities(m);
+
+        for (int i = 0; i < m; i++) {
+            cities[i].resize(2);
+
+            string cities_row_temp_temp;
+            getline(cin, cities_row_temp_temp);
+
+            vector<string> cities_row_temp = split(rtrim(cities_row_temp_temp));
+
+            for (int j = 0; j < 2; j++) {
+                int cities_row_item = stoi(cities_row_temp[j]);
+
+                cities[i][j] = cities_row_item;
+            }
+        }
+
+        long result = roadsAndLibraries(n, c_lib, c_road, cities);
+
+        fout << result << "\n";
+    }
+
+    fout.close();
+
+    return 0;
+}
+
+string ltrim(const string &str) {
+    string s(str);
+
+    s.erase(
+        s.begin(),
+        find_if(s.begin(), s.end(), not1(ptr_fun<int, int>(isspace)))
+    );
+
+    return s;
+}
+
+string rtrim(const string &str) {
+    string s(str);
+
+    s.erase(
+        find_if(s.rbegin(), s.rend(), not1(ptr_fun<int, int>(isspace))).base(),
+        s.end()
+    );
+
+    return s;
+}
+
+vector<string> split(const string &str) {
+    vector<string> tokens;
+
+    string::size_type start = 0;
+    string::size_type end = 0;
+
+    while ((end = str.find(" ", start)) != string::npos) {
+        tokens.push_back(str.substr(start, end - start));
+
+        start = end + 1;
+    }
+
+    tokens.push_back(str.substr(start));
+
+    return tokens;
+}
+
+Equal Stacks----------------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+int equalStacks(vector<int> h1, vector<int> h2, vector<int> h3) {
+    int sum1 = accumulate(h1.begin(), h1.end(), 0);
+    int sum2 = accumulate(h2.begin(), h2.end(), 0);
+    int sum3 = accumulate(h3.begin(), h3.end(), 0);
+
+    int i = 0, j = 0, k = 0; // top indices
+
+    while (true) {
+        // If any stack is empty, height must be 0
+        if (i == h1.size() || j == h2.size() || k == h3.size())
+            return 0;
+
+        // If all heights are equal
+        if (sum1 == sum2 && sum2 == sum3)
+            return sum1;
+
+        // Remove from tallest stack
+        if (sum1 >= sum2 && sum1 >= sum3) {
+            sum1 -= h1[i++];
+        } else if (sum2 >= sum1 && sum2 >= sum3) {
+            sum2 -= h2[j++];
+        } else {
+            sum3 -= h3[k++];
+        }
+    }
+}
+
+int main() {
+    int n1, n2, n3;
+    cin >> n1 >> n2 >> n3;
+    vector<int> h1(n1), h2(n2), h3(n3);
+    
+    for (int i = 0; i < n1; i++) cin >> h1[i];
+    for (int i = 0; i < n2; i++) cin >> h2[i];
+    for (int i = 0; i < n3; i++) cin >> h3[i];
+
+    cout << equalStacks(h1, h2, h3) << "\n";
+    return 0;
+}
+
+The Maximum Subarray-----------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<int> maxSubarray(vector<int> arr) {
+    int n = arr.size();
+    
+    // Kadane's algorithm for max subarray sum
+    int max_sum = arr[0];
+    int current_sum = arr[0];
+    for (int i = 1; i < n; i++) {
+        current_sum = max(arr[i], current_sum + arr[i]);
+        max_sum = max(max_sum, current_sum);
+    }
+    
+    // Max subsequence sum
+    int subseq_sum = 0;
+    int max_element = arr[0];
+    for (int x : arr) {
+        if (x > 0) subseq_sum += x;
+        max_element = max(max_element, x);
+    }
+    if (subseq_sum == 0) subseq_sum = max_element; // all numbers are non-positive
+    
+    return {max_sum, subseq_sum};
+}
+
+int main() {
+    int t;
+    cin >> t;
+    while (t--) {
+        int n;
+        cin >> n;
+        vector<int> arr(n);
+        for (int i = 0; i < n; i++) cin >> arr[i];
+        
+        vector<int> res = maxSubarray(arr);
+        cout << res[0] << " " << res[1] << "\n";
+    }
+    return 0;
+}
+
+QHEAP1-------------------------------------------------------------------------------------
+#include <iostream>
+#include <set>
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    int Q;
+    cin >> Q;
+    set<int> heap; // keeps elements sorted & unique
+
+    while (Q--) {
+        int type, val;
+        cin >> type;
+        if (type == 1) {
+            cin >> val;
+            heap.insert(val); // insert into set
+        } 
+        else if (type == 2) {
+            cin >> val;
+            heap.erase(val); // remove from set
+        } 
+        else if (type == 3) {
+            cout << *heap.begin() << "\n"; // smallest element
+        }
+    }
+
+    return 0;
+}
+
+Jesse and Cookies-------------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+int cookies(int k, vector<int> A) {
+    // Min-heap
+    priority_queue<int, vector<int>, greater<int>> pq(A.begin(), A.end());
+    int operations = 0;
+
+    while (pq.size() > 1 && pq.top() < k) {
+        int least = pq.top(); pq.pop();
+        int second_least = pq.top(); pq.pop();
+        int new_cookie = least + 2 * second_least;
+        pq.push(new_cookie);
+        operations++;
+    }
+
+    // If smallest cookie meets threshold, return count, else -1
+    return (pq.top() >= k) ? operations : -1;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, k;
+    cin >> n >> k;
+    vector<int> A(n);
+    for (int i = 0; i < n; i++) cin >> A[i];
+
+    int result = cookies(k, A);
+    cout << result << "\n";
+}
+
+Hackerland Radio Transmitters------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+int hackerlandRadioTransmitters(vector<int> x, int k) {
+    sort(x.begin(), x.end()); // Sort the house positions
+    int n = x.size();
+    int i = 0, transmitters = 0;
+
+    while (i < n) {
+        transmitters++; // We will place one transmitter in this loop
+
+        // Step 1: Find the furthest house to the right within range k from x[i]
+        int loc = x[i] + k;
+        while (i < n && x[i] <= loc) {
+            i++;
+        }
+
+        // Step 2: Place transmitter at the furthest house found
+        int transmitter_pos = x[i - 1] + k;
+
+        // Step 3: Skip all houses covered by this transmitter
+        while (i < n && x[i] <= transmitter_pos) {
+            i++;
+        }
+    }
+    return transmitters;
+}
+
+int main() {
+    int n, k;
+    cin >> n >> k;
+    vector<int> x(n);
+    for (int i = 0; i < n; i++) {
+        cin >> x[i];
+    }
+
+    cout << hackerlandRadioTransmitters(x, k) << "\n";
+    return 0;
+}
+
+Queries with Fixed Length-------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<int> solve(vector<int> arr, vector<int> queries) {
+    int n = arr.size();
+    vector<int> ans_for_size(n + 1, INT_MAX);
+
+    // For each window size from 1 to n, compute the min of all maxima
+    for (int w = 1; w <= n; w++) {
+        deque<int> dq;
+        int min_max = INT_MAX;
+
+        for (int i = 0; i < n; i++) {
+            // Remove elements outside window
+            while (!dq.empty() && dq.front() <= i - w)
+                dq.pop_front();
+
+            // Maintain decreasing deque
+            while (!dq.empty() && arr[dq.back()] <= arr[i])
+                dq.pop_back();
+
+            dq.push_back(i);
+
+            if (i >= w - 1) {
+                // dq.front() has the index of max in this window
+                min_max = min(min_max, arr[dq.front()]);
+            }
+        }
+
+        ans_for_size[w] = min_max;
+    }
+
+    // Answer the queries
+    vector<int> result;
+    for (int q : queries) {
+        result.push_back(ans_for_size[q]);
+    }
+    return result;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, m;
+    cin >> n >> m;
+    vector<int> arr(n);
+    for (int i = 0; i < n; i++) cin >> arr[i];
+    vector<int> queries(m);
+    for (int i = 0; i < m; i++) cin >> queries[i];
+
+    vector<int> ans = solve(arr, queries);
+    for (int v : ans) cout << v << " ";
+    cout << "\n";
+
+    return 0;
+}
+
+Queries with Fixed Length-----------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<int> solve(vector<int> arr, vector<int> queries) {
+    int n = arr.size();
+    vector<int> left(n), right(n);
+    stack<int> st;
+
+    // Nearest greater to the left
+    for (int i = 0; i < n; i++) {
+        while (!st.empty() && arr[st.top()] <= arr[i])
+            st.pop();
+        left[i] = st.empty() ? -1 : st.top();
+        st.push(i);
+    }
+
+    while (!st.empty()) st.pop();
+
+    // Nearest greater to the right
+    for (int i = n - 1; i >= 0; i--) {
+        while (!st.empty() && arr[st.top()] < arr[i])
+            st.pop();
+        right[i] = st.empty() ? n : st.top();
+        st.push(i);
+    }
+
+    vector<int> res(n + 1, INT_MAX);
+
+    // Fill res for the window size where arr[i] is max
+    for (int i = 0; i < n; i++) {
+        int len = right[i] - left[i] - 1;
+        res[len] = min(res[len], arr[i]);
+    }
+
+    // Fill remaining using propagation
+    for (int i = n - 1; i >= 1; i--) {
+        res[i] = min(res[i], res[i + 1]);
+    }
+
+    // Answer queries
+    vector<int> ans;
+    for (int q : queries) ans.push_back(res[q]);
+    return ans;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, q;
+    cin >> n >> q;
+    vector<int> arr(n);
+    for (int i = 0; i < n; i++) cin >> arr[i];
+    vector<int> queries(q);
+    for (int i = 0; i < q; i++) cin >> queries[i];
+
+    vector<int> output = solve(arr, queries);
+    for (int x : output) cout << x << " ";
+    cout << "\n";
+}
+
+Array Manipulation-------------------------------------------------------------------------------------#include <bits/stdc++.h>
+using namespace std;
+
+long arrayManipulation(int n, vector<vector<int>> queries) {
+    vector<long> arr(n + 2, 0);
+    
+    for (auto &q : queries) {
+        int a = q[0];
+        int b = q[1];
+        int k = q[2];
+        arr[a] += k;
+        arr[b + 1] -= k;
+    }
+    
+    long maxVal = 0, curr = 0;
+    for (int i = 1; i <= n; i++) {
+        curr += arr[i];
+        maxVal = max(maxVal, curr);
+    }
+    return maxVal;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    int n, m;
+    cin >> n >> m;
+    vector<vector<int>> queries(m, vector<int>(3));
+    for (int i = 0; i < m; i++) {
+        cin >> queries[i][0] >> queries[i][1] >> queries[i][2];
+    }
+    cout << arrayManipulation(n, queries) << "\n";
+    return 0;
+}
+
+Highest Value Palindrome------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+string highestValuePalindrome(string s, int n, int k) {
+    vector<bool> changed(n, false);
+    int left = 0, right = n - 1;
+    int changes_needed = 0;
+
+    // Step 1: Make it a palindrome with minimum changes
+    while (left < right) {
+        if (s[left] != s[right]) {
+            char maxChar = max(s[left], s[right]);
+            s[left] = s[right] = maxChar;
+            changed[left] = changed[right] = true;
+            k--;
+        }
+        left++;
+        right--;
+    }
+
+    // If not enough changes to make palindrome
+    if (k < 0) return "-1";
+
+    // Step 2: Maximize the palindrome to the largest possible number
+    left = 0, right = n - 1;
+    while (left <= right) {
+        if (left == right) {
+            // Middle element in odd length, change to 9 if possible
+            if (k > 0 && s[left] != '9') {
+                s[left] = '9';
+                k--;
+            }
+        } else {
+            if (s[left] != '9') {
+                if (changed[left] || changed[right]) {
+                    // Already changed before, so upgrading to '9' costs 1 more change
+                    if (k >= 1) {
+                        s[left] = s[right] = '9';
+                        k--;
+                    }
+                } else {
+                    // Not changed before, upgrading costs 2 changes
+                    if (k >= 2) {
+                        s[left] = s[right] = '9';
+                        k -= 2;
+                    }
+                }
+            }
+        }
+        left++;
+        right--;
+    }
+
+    return s;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    int n, k;
+    cin >> n >> k;
+    string s;
+    cin >> s;
+
+    cout << highestValuePalindrome(s, n, k) << "\n";
+    return 0;
+}
+
+Lily's Homework-------------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+int countSwaps(vector<int> arr, vector<int> sortedArr) {
+    int n = arr.size();
+    unordered_map<int, int> pos;
+    for (int i = 0; i < n; i++) pos[arr[i]] = i;
+    int swaps = 0;
+    for (int i = 0; i < n; i++) {
+        if (arr[i] != sortedArr[i]) {
+            swaps++;
+            int correctValue = sortedArr[i];
+            int toSwapIdx = pos[correctValue];
+            pos[arr[i]] = toSwapIdx;
+            pos[correctValue] = i;
+            swap(arr[i], arr[toSwapIdx]);
+        }
+    }
+    return swaps;
+}
+
+int lilysHomework(vector<int> arr) {
+    vector<int> sortedArr = arr;
+    sort(sortedArr.begin(), sortedArr.end());
+    vector<int> revSortedArr = sortedArr;
+    reverse(revSortedArr.begin(), revSortedArr.end());
+    return min(countSwaps(arr, sortedArr), countSwaps(arr, revSortedArr));
+}
+
+int main() {
+    int n;
+    cin >> n;
+    vector<int> arr(n);
+    for (int i = 0; i < n; i++) cin >> arr[i];
+    cout << lilysHomework(arr) << "\n";
+    return 0;
+}
+
+Tree: Preorder Traversal---------------------------------------------------------------------
+void preOrder(Node* root) {
+    if (root == NULL) return;
+    std::cout << root->data << " ";
+    preOrder(root->left);
+    preOrder(root->right);
+}
+
+Tree: Huffman Decoding-------------------------------------------------------------------------
+void decode_huff(node *root, string s) {
+    node *curr = root;
+    for (char c : s) {
+        if (c == '0')
+            curr = curr->left;
+        else
+            curr = curr->right;
+
+        if (curr->left == nullptr && curr->right == nullptr) {
+            cout << curr->data;
+            curr = root;
+        }
+    }
+}
+
+Binary Search Tree : Lowest Common Ancestor---------------------------------------------------
+Node* lca(Node* root, int v1, int v2) {
+    if (root == nullptr) return nullptr;
+
+    if (root->data > v1 && root->data > v2)
+        return lca(root->left, v1, v2);
+
+    if (root->data < v1 && root->data < v2)
+        return lca(root->right, v1, v2);
+
+    return root;
+}
+
+No Prefix Set---------------------------------------------------------------------------------
+struct TrieNode {
+    unordered_map<char, TrieNode*> children;
+    bool isEnd;
+    TrieNode() : isEnd(false) {}
+};
+
+bool insertWord(TrieNode* root, const string &word) {
+    TrieNode* curr = root;
+    for (char c : word) {
+        if (curr->isEnd) return false; // existing word is prefix of current
+        if (!curr->children.count(c)) curr->children[c] = new TrieNode();
+        curr = curr->children[c];
+    }
+    if (curr->isEnd) return false; // identical word
+    if (!curr->children.empty()) return false; // current word is prefix of existing
+    curr->isEnd = true;
+    return true;
+}
+
+void noPrefix(vector<string> words) {
+    TrieNode* root = new TrieNode();
+    for (string &word : words) {
+        if (!insertWord(root, word)) {
+            cout << "BAD SET\n" << word << "\n";
+            return;
+        }
+    }
+    cout << "GOOD SET\n";
+}
+
+Castle on the Grid---------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+int minimumMoves(vector<string> grid, int startX, int startY, int goalX, int goalY) {
+    int n = grid.size();
+    vector<vector<int>> dist(n, vector<int>(n, -1));
+    queue<pair<int, int>> q;
+    
+    q.push({startX, startY});
+    dist[startX][startY] = 0;
+    
+    int dx[] = {1, -1, 0, 0};
+    int dy[] = {0, 0, 1, -1};
+    
+    while (!q.empty()) {
+        auto [x, y] = q.front();
+        q.pop();
+        
+        if (x == goalX && y == goalY) return dist[x][y];
+        
+        for (int dir = 0; dir < 4; dir++) {
+            int nx = x, ny = y;
+            while (true) {
+                nx += dx[dir];
+                ny += dy[dir];
+                
+                if (nx < 0 || ny < 0 || nx >= n || ny >= n || grid[nx][ny] == 'X') break;
+                
+                if (dist[nx][ny] == -1) {
+                    dist[nx][ny] = dist[x][y] + 1;
+                    q.push({nx, ny});
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+int main() {
+    int n;
+    cin >> n;
+    vector<string> grid(n);
+    for (int i = 0; i < n; i++) {
+        cin >> grid[i];
+    }
+    int startX, startY, goalX, goalY;
+    cin >> startX >> startY >> goalX >> goalY;
+    
+    cout << minimumMoves(grid, startX, startY, goalX, goalY) << endl;
+    return 0;
+}
+
+Lego Blocks------------------------------------------------------------------------------------
+
+const int MOD = 1000000007;
+
+long long modPow(long long base, long long exp) {
+    long long res = 1;
+    base %= MOD;
+    while (exp > 0) {
+        if (exp & 1) res = (res * base) % MOD;
+        base = (base * base) % MOD;
+        exp >>= 1;
+    }
+    return res;
+}
+
+int legoBlocks(int n, int m) {
+    vector<long long> rowWays(m + 1, 0);
+    rowWays[0] = 1;
+    for (int i = 1; i <= m; i++) {
+        for (int block = 1; block <= 4; block++) {
+            if (i - block >= 0) {
+                rowWays[i] = (rowWays[i] + rowWays[i - block]) % MOD;
+            }
+        }
+    }
+
+    vector<long long> totalWays(m + 1, 0);
+    for (int i = 1; i <= m; i++) {
+        totalWays[i] = modPow(rowWays[i], n);
+    }
+
+    vector<long long> solidWays(m + 1, 0);
+    solidWays[0] = 0;
+    solidWays[1] = totalWays[1];
+    for (int width = 2; width <= m; width++) {
+        long long invalid = 0;
+        for (int cut = 1; cut < width; cut++) {
+            invalid = (invalid + (solidWays[cut] * totalWays[width - cut]) % MOD) % MOD;
+        }
+        solidWays[width] = (totalWays[width] - invalid + MOD) % MOD;
+    }
+
+    return (int)solidWays[m];
+}
