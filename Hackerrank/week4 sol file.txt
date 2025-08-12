@@ -781,3 +781,4 @@ int legoBlocks(int n, int m) {
 
     return (int)solidWays[m];
 }
+
