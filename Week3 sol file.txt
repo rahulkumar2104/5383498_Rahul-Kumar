@@ -1,0 +1,610 @@
+New Year Chaos-------------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+void minimumBribes(vector<int> q) {
+    int bribes = 0;
+
+    for (int i = 0; i < q.size(); i++) {
+        if (q[i] - (i + 1) > 2) {
+            cout << "Too chaotic" << endl;
+            return;
+        }
+
+        for (int j = max(0, q[i] - 2); j < i; j++) {
+            if (q[j] > q[i]) {
+                bribes++;
+            }
+        }
+    }
+
+    cout << bribes << endl;
+}
+
+// Driver code
+int main() {
+    int t;
+    cin >> t;
+
+    while (t--) {
+        int n;
+        cin >> n;
+        vector<int> q(n);
+        for (int i = 0; i < n; i++) {
+            cin >> q[i];
+        }
+        minimumBribes(q);
+    }
+
+    return 0;
+}
+
+The Bomberman Game----------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<string> detonate(const vector<string>& grid, int r, int c) {
+    vector<string> result(r, string(c, 'O'));
+    for (int i = 0; i < r; ++i) {
+        for (int j = 0; j < c; ++j) {
+            if (grid[i][j] == 'O') {
+                result[i][j] = '.';
+                if (i > 0) result[i-1][j] = '.';
+                if (i < r-1) result[i+1][j] = '.';
+                if (j > 0) result[i][j-1] = '.';
+                if (j < c-1) result[i][j+1] = '.';
+            }
+        }
+    }
+    return result;
+}
+
+vector<string> bomberMan(int n, vector<string> grid) {
+    int r = grid.size();
+    int c = grid[0].size();
+
+    if (n == 1) return grid;
+
+    if (n % 2 == 0) {
+        return vector<string>(r, string(c, 'O'));
+    }
+
+    vector<string> first = detonate(grid, r, c);
+    vector<string> second = detonate(first, r, c);
+
+    if (n % 4 == 3) return first;
+    return second;
+}
+
+int main() {
+    int r, c, n;
+    cin >> r >> c >> n;
+    cin.ignore();
+
+    vector<string> grid(r);
+    for (int i = 0; i < r; i++) {
+        getline(cin, grid[i]);
+    }
+
+    vector<string> result = bomberMan(n, grid);
+
+    for (const string& row : result) {
+        cout << row << "\n";
+    }
+
+    return 0;
+}
+
+Sherlock and the Valid String------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+string isValid(string s) {
+    unordered_map<char, int> freq;
+    for (char c : s) {
+        freq[c]++;
+    }
+
+    unordered_map<int, int> freqCount;
+    for (auto &[ch, count] : freq) {
+        freqCount[count]++;
+    }
+
+    if (freqCount.size() == 1) {
+        return "YES";
+    }
+
+    if (freqCount.size() == 2) {
+        auto it = freqCount.begin();
+        int f1 = it->first, c1 = it->second;
+        ++it;
+        int f2 = it->first, c2 = it->second;
+
+        if ((f1 == 1 && c1 == 1) || (f2 == 1 && c2 == 1)) {
+            return "YES";
+        }
+
+        if ((abs(f1 - f2) == 1) && ((f1 > f2 && c1 == 1) || (f2 > f1 && c2 == 1))) {
+            return "YES";
+        }
+    }
+
+    return "NO";
+}
+
+int main() {
+    ofstream fout(getenv("OUTPUT_PATH"));
+    string s;
+    getline(cin, s);
+
+    string result = isValid(s);
+    fout << result << "\n";
+
+    return 0;
+}
+
+Climbing the Leaderboard---------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<int> climbingLeaderboard(vector<int> ranked, vector<int> player) {
+    vector<int> result;
+    vector<int> uniqueRanked;
+    
+    uniqueRanked.push_back(ranked[0]);
+    for (int i = 1; i < ranked.size(); ++i) {
+        if (ranked[i] != ranked[i - 1]) {
+            uniqueRanked.push_back(ranked[i]);
+        }
+    }
+
+    int n = uniqueRanked.size();
+    int index = n - 1;
+
+    for (int score : player) {
+        while (index >= 0 && score >= uniqueRanked[index]) {
+            index--;
+        }
+        result.push_back(index + 2);
+    }
+
+    return result;
+}
+
+int main() {
+    ofstream fout(getenv("OUTPUT_PATH"));
+
+    int ranked_count;
+    cin >> ranked_count;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    string ranked_temp_temp;
+    getline(cin, ranked_temp_temp);
+
+    vector<string> ranked_temp = split(rtrim(ranked_temp_temp));
+    vector<int> ranked(ranked_count);
+
+    for (int i = 0; i < ranked_count; i++) {
+        int ranked_item = stoi(ranked_temp[i]);
+        ranked[i] = ranked_item;
+    }
+
+    int player_count;
+    cin >> player_count;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    string player_temp_temp;
+    getline(cin, player_temp_temp);
+
+    vector<string> player_temp = split(rtrim(player_temp_temp));
+    vector<int> player(player_count);
+
+    for (int i = 0; i < player_count; i++) {
+        int player_item = stoi(player_temp[i]);
+        player[i] = player_item;
+    }
+
+    vector<int> result = climbingLeaderboard(ranked, player);
+
+    for (size_t i = 0; i < result.size(); i++) {
+        fout << result[i];
+        if (i != result.size() - 1) {
+            fout << "\n";
+        }
+    }
+
+    fout << "\n";
+    fout.close();
+
+    return 0;
+}
+
+string ltrim(const string &str) {
+    return string(find_if(str.begin(), str.end(), [](int ch) {
+        return !isspace(ch);
+    }), str.end());
+}
+
+string rtrim(const string &str) {
+    return string(str.begin(), find_if(str.rbegin(), str.rend(), [](int ch) {
+        return !isspace(ch);
+    }).base());
+}
+
+vector<string> split(const string &str) {
+    vector<string> tokens;
+    string token;
+    istringstream tokenStream(str);
+    while (tokenStream >> token) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+Reverse a linked list-------------------------------------------------------------------
+SinglyLinkedListNode* reverse(SinglyLinkedListNode *llist)
+{
+	SinglyLinkedListNode *present = llist;
+	SinglyLinkedListNode * future;
+	SinglyLinkedListNode *past = nullptr;
+	while (present != nullptr)
+	{
+		future = present->next;
+		present->next = past;
+		past = present;
+		present = future;
+	}
+
+	return past;
+}
+
+Reverse a doubly linked list-----------------------------------------------------------------
+DoublyLinkedListNode* reverse(DoublyLinkedListNode* head)
+{
+    // Complete this function
+    // Do not write the main method. 
+    DoublyLinkedListNode *current = head;
+    DoublyLinkedListNode *temp = NULL;
+    
+    while ( current != NULL) {
+        temp = current -> prev;
+         current -> prev =  current -> next;
+         current -> next = temp;   
+        current =  current -> prev;
+    
+    } 
+    
+    if (temp != NULL)
+        head = temp -> prev;
+    return head;
+
+}
+
+Insert a node at a specific position in a linked list------------------------------------------
+SinglyLinkedListNode* insertNodeAtPosition(SinglyLinkedListNode* head, int data, int position) {
+SinglyLinkedListNode *temp=new SinglyLinkedListNode(data);
+SinglyLinkedListNode *nh= head;
+for(int i=0;i<position-1;i++)
+{
+    nh=nh->next;
+}
+SinglyLinkedListNode *t;
+t=nh->next ;
+nh->next=temp;
+temp->next=t;
+return head;
+}
+
+Merge two sorted linked lists-----------------------------------------------------------------
+SinglyLinkedListNode* mergeLists(SinglyLinkedListNode* head1, SinglyLinkedListNode* head2) {
+    if(!head1) return head2;
+    if(!head2) return head1;
+    SinglyLinkedListNode *p1 = head1, *p2 = head2, *h, *p;
+    if(p1->data < p2->data) {
+        h = p1;
+        p1 = p1->next;
+    } else {
+        h = p2;
+        p2 = p2->next;
+    }
+    p = h;
+    while(p1!=NULL || p2!=NULL) {
+        if(!p2 || (p1 && p1->data < p2->data)) {
+            p->next = p1;
+            p1 = p1->next;
+        } else {
+            p->next = p2;
+            p2 = p2->next;
+        }
+        p = p->next;
+    }
+    return h;
+}
+
+Ice Cream Parlor-----------------------------------------------------------------------------
+vector<int> icecreamParlor(int m, vector<int> cost) {
+    unordered_map<int, int> seen; // cost -> index (1-based)
+    
+    for (int i = 0; i < cost.size(); i++) {
+        int complement = m - cost[i];
+        if (seen.count(complement)) {
+            return {seen[complement], i + 1}; // return indices (1-based)
+        }
+        seen[cost[i]] = i + 1; // store index
+    }
+    return {};
+}
+
+Queue using Two Stacks----------------------------------------------------------------------
+#include <bits/stdc++.h>
+#include <stack> // Required for std::stack
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    stack<int> s1, s2;
+    int num_operations;
+    cin >> num_operations;
+
+    while (num_operations--) {
+        int Q_operation;
+        cin >> Q_operation;
+
+        if (Q_operation == 1) { 
+            int x;
+            cin >> x;
+            s1.push(x);
+        }
+        else if (Q_operation == 2) { 
+            if (s2.empty()) {
+                while (!s1.empty()) {
+                    s2.push(s1.top());
+                    s1.pop();
+                }
+            }
+            s2.pop();
+        }
+        else if (Q_operation == 3) { 
+            if (s2.empty()) {
+                while (!s1.empty()) {
+                    s2.push(s1.top());
+                    s1.pop();
+                }
+            }
+            cout << s2.top() << "\n";
+        }
+    }
+    return 0;
+}
+
+Balanced Brackets--------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+string isBalanced(string s) {
+    stack<char> st;
+
+    for (auto c : s) {
+        switch (c) {
+            case '{':
+            case '(':
+            case '[':
+                st.push(c);
+                break;
+            case '}':
+                if (st.empty() || st.top() != '{') return "NO";
+                st.pop();
+                break;
+            case ')':
+                if (st.empty() || st.top() != '(') return "NO";
+                st.pop();
+                break;
+            case ']':
+                if (st.empty() || st.top() != '[') return "NO";
+                st.pop();
+                break;
+        }
+    }
+    return st.empty() ? "YES" : "NO";
+}
+
+int main() {
+    int t;
+    cin >> t;
+    while (t--) {
+        string s;
+        cin >> s;
+        cout << isBalanced(s) << "\n";
+    }
+    return 0;
+}
+
+
+Waiter--------------------------------------------------------------------------------------
+#include <bits/stdc++.h>
+#include <vector>
+
+using namespace std;
+
+vector<string> split_string(string);
+
+// function to get the prime number from 2 to 10^4
+vector<int> getPrime (){
+    vector<int> prime;
+    int lower = 2;
+    int upper = 10000;
+    for (int i=lower; i<upper; i++){
+        bool isPrime = 0;
+        for(int j=lower; j<=sqrt(i); j++){
+            if (i%j == 0)
+                isPrime = 1;
+        }
+        if (isPrime == 0)
+            prime.push_back(i);
+    }
+    return prime;
+}
+
+vector<int> waiter(vector<int> number, int q) {
+    vector<int> result, strA, strB;   
+    int num;
+    vector<int> prime = getPrime(); // assign all the prime number to array
+    
+    for (int i=0; i<q; i++){
+        int size = number.size();
+        
+        for (int j=0; j<size; j++){
+            num = number.back();
+            
+            // if the number is divisible by the prime number, store it to stack strB
+            // if not, store it to stack strB
+            if( num % prime[i] == 0 ){
+                strB.push_back(num);
+                number.pop_back();
+            }
+            else{
+                strA.push_back(num);    
+                number.pop_back();
+            }
+        }
+        number = strA;  // do the iteration with number in the strA
+        strA.clear();
+        
+        // move the strB stack value to the result stack
+        while (!strB.empty()){
+            result.push_back(strB.back());
+            strB.pop_back();
+        }
+    }
+    
+    // if the strA stack not empty until all iteration, move it to result stack
+    while (!number.empty()){
+        result.push_back(number.back());
+        number.pop_back();
+    }
+    return result;
+}
+
+int main()
+{
+    ofstream fout(getenv("OUTPUT_PATH"));
+
+    string nq_temp;
+    getline(cin, nq_temp);
+
+    vector<string> nq = split_string(nq_temp);
+
+    int n = stoi(nq[0]);
+
+    int q = stoi(nq[1]);
+
+    string number_temp_temp;
+    getline(cin, number_temp_temp);
+
+    vector<string> number_temp = split_string(number_temp_temp);
+
+    vector<int> number(n);
+
+    for (int number_itr = 0; number_itr < n; number_itr++) {
+        int number_item = stoi(number_temp[number_itr]);
+
+        number[number_itr] = number_item;
+    }
+
+    vector<int> result = waiter(number, q);
+
+    for (int result_itr = 0; result_itr < result.size(); result_itr++) {
+        fout << result[result_itr];
+
+        if (result_itr != result.size() - 1) {
+            fout << "\n";
+        }
+    }
+
+    fout << "\n";
+
+    fout.close();
+
+    return 0;
+}
+
+vector<string> split_string(string input_string) {
+    string::iterator new_end = unique(input_string.begin(), input_string.end(), [] (const char &x, const char &y) {
+        return x == y and x == ' ';
+    });
+
+    input_string.erase(new_end, input_string.end());
+
+    while (input_string[input_string.length() - 1] == ' ') {
+        input_string.pop_back();
+    }
+
+    vector<string> splits;
+    char delimiter = ' ';
+
+    size_t i = 0;
+    size_t pos = input_string.find(delimiter);
+
+    while (pos != string::npos) {
+        splits.push_back(input_string.substr(i, pos - i));
+
+        i = pos + 1;
+        pos = input_string.find(delimiter, i);
+    }
+
+    splits.push_back(input_string.substr(i, min(pos, input_string.length()) - i + 1));
+
+    return splits;
+}
+
+Simple Text Editor----------------------------------------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int Q;
+    cin >> Q;
+
+    string S = "";
+    stack<string> history; // to store previous states for undo
+    history.push(S);       // initial state
+
+    for (int i = 0; i < Q; i++) {
+        int type;
+        cin >> type;
+
+        if (type == 1) {
+            // append
+            string w;
+            cin >> w;
+            S += w;
+            history.push(S);
+
+        } else if (type == 2) {
+            // delete last k characters
+            int k;
+            cin >> k;
+            S.erase(S.size() - k);
+            history.push(S);
+
+        } else if (type == 3) {
+            // print kth character (1-indexed)
+            int k;
+            cin >> k;
+            cout << S[k - 1] << "\n";
+
+        } else if (type == 4) {
+            // undo last operation
+            history.pop();
+            S = history.top();
+        }
+    }
+
+    return 0;
+}
+
